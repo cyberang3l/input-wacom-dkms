@@ -2,8 +2,7 @@
 #  input-wacom-dkms script will download the input-wacom drivers from the
 #  website and install them in the system using dkms. I wrote and tested this
 #  script in Ubuntu 14.04, but it should be working on different versions
-#  of <at least> Ubuntu (you will have to change two variables if your kernel
-#  (uname -r) is <= 2.6.38 or >= 3.17
+#  of <at least> Ubuntu.
 #
 #  Copyright (C) 2015 Vangelis Tasoulas <cyberang3l@gmail.com>
 #
@@ -34,11 +33,6 @@
 # Run the script with sudo (needs root privileges) and choose either "install" or "uninstall"
 # as a command line argument.
 # If you want to install a different version, just change the version number in variable "pkgver"
-#
-# One more change you might need to do if your kernel (uname -r) is <= 2.6.38 or >= 3.17:
-#  1) find the lines: BUILT_MODULE_LOCATION[0]="3.7/"
-#                     BUILT_MODULE_LOCATION[1]="3.7/"
-#  2) change 3.7 to the corresponding kernel valus
 
 if [[ "$(whoami)" != "root" ]]; then
    echo "You must be root to execute this script."
