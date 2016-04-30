@@ -52,7 +52,7 @@ if [[ "$1" != "install" && "$1" != "uninstall" ]]; then
 fi
 
 pkgname=input-wacom
-pkgver=0.26.0
+pkgver=0.30.2
 dest_dir="/usr/src/"
 dkms_location="$dest_dir"/"$pkgname-$pkgver"/"dkms.conf"
 blacklist_file="/etc/modprobe.d/blacklist-""$pkgname""-dkms.conf"
@@ -110,7 +110,8 @@ function create_dkms_file {
    cat << EOF > "$dkms_location"
 PACKAGE_NAME="$pkgname"
 PACKAGE_VERSION="$pkgver"
-MAKE[0]="./configure"
+CLEAN="make clean"
+MAKE[0]="./configure && make"
 BUILT_MODULE_NAME[0]="wacom"
 DEST_MODULE_NAME[0]="wacom_dkms"
 BUILT_MODULE_NAME[1]="wacom_w8001"
