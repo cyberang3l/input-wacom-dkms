@@ -46,10 +46,30 @@ MAX_MODES_PER_PROFILE = 4
 # I don't know if there are other devices with less or more modes, but if they do, feel free to
 # change the variable and define the corresponding modes accordingly.
 #
-# In principle, the way the script works could support unlimited modes for any device, and with
-# some slight modifications, it could even support changing other wacom keys on the "fly". Not
-# only the behavior of the touchring. However, you will not have proper LED indication if you choose
-# to add more modes than those supported by your device.
+# In principle, the way the script works could support unlimited modes for any device.  However,
+# you will not have proper LED indication if you choose to add more modes than those supported
+# by your device. Also if you define parameter keys other than the AbsWheelUp and AbsWheelDown,
+# the script could support changing other wacom keys on the "fly". Not only the behavior of the
+# touchring.
+#
+# Use the command 'xsetwacom --list parameters' to see a list of available parameter keys (such as
+# the AbsWheelUp and AbsWheelDown in the already provided PROFILES)
+#
+# Use the command 'xsetwacom --list modifiers' to see a list of available parameter modifier that you
+# can use a parameter values (how to use keys such as Home, Eng, Backspace, Page Down etc).
+#
+# Also, in order to emulate mouse clicks as parameter values, use the following:
+#       1=left-click
+#       2=middle click
+#       3=right mouse button
+#       4=scroll mouse wheel up
+#       5=scroll mouse wheel down
+#
+# For a simple example, look the 'Default' PROFILE below:
+#     We define in the cmdlist that when the touchring is "rotated" anticlockwise (parameter key
+#     "AbsWheelUp") the touchring will emulate a mouse wheel up even (parameter value "4").
+#     When the touchring is "rotated" clockwise (parameter key "AbsWheelDown") the touchring will
+#     emulate a mouse wheel down event (parameter value "5")
 PROFILE = OrderedDict({
     #####################
     ## DEFAULT PROFILE ##
@@ -58,10 +78,8 @@ PROFILE = OrderedDict({
         # Scroll Up/Down in default mode. Use only mode 0.
         '0':{'mode_description': "Default Mode 0 - Scroll Up/Down",
              'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'4' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'5'}
+             'cmdlist': {'AbsWheelUp':'4',
+                         'AbsWheelDown':'5'}
              }
     },
     ###################
@@ -71,18 +89,14 @@ PROFILE = OrderedDict({
         # Zoom In/Out in Krita
         '0':{'mode_description': "Krita Mode 0 - Zoom In/Out",
              'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'4' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'5'}
+             'cmdlist': {'AbsWheelUp':'4',
+                         'AbsWheelDown':'5'}
              },
         # Rotate Right/Left in Krita
         '1':{'mode_description': "Krita Mode 1 - Rotate Right/Left",
              'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'key 4' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'key 6'}
+             'cmdlist': {'AbsWheelUp':'key 4',
+                         'AbsWheelDown':'key 6'}
              }
     },
     ##################
@@ -90,28 +104,22 @@ PROFILE = OrderedDict({
     ##################
     "Gimp": {
         # Scroll up/down in Gimp
-        '0':{'mode_description': "Krita Mode 0 - Zoom in/out",
-             'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'4' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'5'}
-             },
         # Zoom In/Out in Gimp
-        '1':{'mode_description': "Krita Mode 0 - Zoom in/out",
+        '0':{'mode_description': "Gimp Mode 0 - Zoom in/out",
              'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'key alt up' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'key alt down'}
+             'cmdlist': {'AbsWheelUp':'key +shift =',
+                         'AbsWheelDown':'key -'}
+             },
+        '1':{'mode_description': "Gimp Mode 1 - Scroll up/down",
+             'apply_to_dev_type': "PAD",
+             'cmdlist': {'AbsWheelUp':'4',
+                         'AbsWheelDown':'5'}
              },
         # Next/Prev Layer in Gimp
-        '2':{'mode_description': "Krita Mode 1 - Rotate Right/left",
+        '2':{'mode_description': "Gimp Mode 2 - Next/Prev Layer",
              'apply_to_dev_type': "PAD",
-             'cmdlist': {'param_up_key':'AbsWheelUp',
-                         'param_up_val':'key PgUp' ,
-                         'param_down_key':'AbsWheelDown',
-                         'param_down_val':'key PgDn'}
+             'cmdlist': {'AbsWheelUp':'key PgUp',
+                         'AbsWheelDown':'key PgDn'}
              },
     }
 })
@@ -436,7 +444,7 @@ class toggle_touchring(object):
 
             # Add all of the devices listed by 'xsetwacom --list' in a dict.
             # Use the "type" of the device as the dict key.
-            cmd.execute('xsetwacom --list')
+            cmd.execute('xsetwacom --list devices')
             r = quick_regexp()
             for wacom_device in cmd.getStdout():
                 if(r.search("(.*)\s+id:\s+(\d+)\s+type:\s+(\w+)", wacom_device)):
@@ -444,10 +452,11 @@ class toggle_touchring(object):
                     wacom_dev_name = r.groups[0]
                     wacom_dev_id = r.groups[1]
                     wacom_dev_type = r.groups[2]
-                    self.WACOM_DEVICES[wacom_dev_type] = {
-                        'id': wacom_dev_id,
-                        'name': wacom_dev_name
-                    }
+                    # We may have more than one device a specific "dev_type", so create one dictionary
+                    # per device type and add all of the devices in the dictionary.
+                    if not self.WACOM_DEVICES.has_key(wacom_dev_type):
+                        self.WACOM_DEVICES[wacom_dev_type] = {}
+                    self.WACOM_DEVICES[wacom_dev_type][wacom_dev_id] = wacom_dev_name
 
             #print_(self.WACOM_DEVICES)
 
@@ -476,10 +485,12 @@ class toggle_touchring(object):
         LOG.debug("Changing to mode '{}'".format(PROFILE[self.CURRENT_WACOM_PROFILE][str(self.CURRENT_MODE)]['mode_description']))
 
         current_mode = PROFILE[self.CURRENT_WACOM_PROFILE][str(self.CURRENT_MODE)]
-        dev_name = self.WACOM_DEVICES[current_mode['apply_to_dev_type']]['name']
-        # Update the 'param_up_key' and 'param_down_key' properties as defined in the currently used profile.
-        cmd.execute('xsetwacom --set "{}" {} {}'.format(dev_name, current_mode['cmdlist']['param_up_key'], current_mode['cmdlist']['param_up_val']))
-        cmd.execute('xsetwacom --set "{}" {} {}'.format(dev_name, current_mode['cmdlist']['param_down_key'], current_mode['cmdlist']['param_down_val']))
+        for dev_id, dev_name in self.WACOM_DEVICES[current_mode['apply_to_dev_type']].items():
+            # Update the 'param_up_key' and 'param_down_key' properties as defined in the currently used profile.
+            for param_key, param_val in current_mode['cmdlist'].items():
+                command_str = 'xsetwacom --set "{}" {} {}'.format(dev_name, param_key, param_val)
+                LOG.debug(command_str)
+                cmd.execute(command_str)
 
 
 
