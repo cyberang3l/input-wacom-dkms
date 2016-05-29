@@ -414,8 +414,16 @@ class toggle_touchring(object):
     """
     #----------------------------------------------------------------------
     def __init__(self):
+        # Choose the right led path based on the kernel version
+	system_kernel_version = os.uname()[2]
+	compare_kernel_version = "3.17"
+        if system_kernel_version < compare_kernel_version:
+            status_led0_select_path = '/sys/bus/usb/devices/*/wacom_led/status_led0_select'
+        else:
+            status_led0_select_path = '/sys/class/hidraw/hidraw*/device/wacom_led/status_led0_select'
+	
         # Get the status_led0_select file
-        cmd = executeCommand('ls /sys/bus/usb/devices/*/wacom_led/status_led0_select', shell=True)
+        cmd = executeCommand('ls {}'.format(status_led0_select_path), shell=True)
         # If the return status of the ls file == 0, the file exists.
         if cmd.getReturnCode() == 0:
             self.SYS_LED_FILE = cmd.getStdout(False).strip()
@@ -437,7 +445,7 @@ class toggle_touchring(object):
             cmd.execute('qdbus org.kde.Wacom /Tablet org.kde.Wacom.getProfile')
             self.CURRENT_WACOM_PROFILE = cmd.getStdout(False).strip()
             if self.CURRENT_WACOM_PROFILE not in PROFILE.keys():
-                LOG.debug("Currently selected profile '{}' is node defined in PROFILE dict. Falling back to 'Default'".format(self.CURRENT_WACOM_PROFILE))
+                LOG.debug("Currently selected profile '{}' is not defined in PROFILE dict. Falling back to 'Default'".format(self.CURRENT_WACOM_PROFILE))
                 self.CURRENT_WACOM_PROFILE = "Default"
 
             LOG.debug("Selected profile '{}' with {} modes.".format(self.CURRENT_WACOM_PROFILE, len(PROFILE[self.CURRENT_WACOM_PROFILE])))
@@ -461,7 +469,7 @@ class toggle_touchring(object):
             #print_(self.WACOM_DEVICES)
 
         else:
-            LOG.debug("Return code of 'ls /sys/bus/usb/devices/*/wacom_led/status_led0_select': {}".format(cmd.getReturnCode()))
+            LOG.debug("Return code of 'ls {}': {}".format(status_led0_select_path, cmd.getReturnCode()))
             exit(cmd.getReturnCode())
 
 
