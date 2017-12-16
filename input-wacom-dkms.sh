@@ -127,9 +127,15 @@ EOF
 
 function create_udev_rules_file {
    # Create a udev rules to give permission to simple users to change the led status
-   cat << EOF > "$udev_rules_file"
+   if [[ "$DRIVER_KERNEL_VER" == "3.17" ]]; then
+      cat << EOF > "$udev_rules_file"
+ATTRS{idVendor}=="056a", RUN+="/bin/bash -c '/bin/chmod 666 /sys/class/hidraw/hidraw*/device/wacom_led/status_led*_select'"
+EOF
+   else
+      cat << EOF > "$udev_rules_file"
 ATTRS{idVendor}=="056a", RUN+="/bin/bash -c '/bin/chmod 666 /sys/bus/usb/devices/*/wacom_led/status_led*_select'"
 EOF
+   fi
 }
 
 if [[ "$1" == "install" ]]; then
