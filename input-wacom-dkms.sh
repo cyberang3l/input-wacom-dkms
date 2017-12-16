@@ -52,7 +52,7 @@ if [[ "$1" != "install" && "$1" != "uninstall" ]]; then
 fi
 
 pkgname=input-wacom
-pkgver=0.32.0
+pkgver=0.37.1
 dest_dir="/usr/src/"
 dkms_location="$dest_dir"/"$pkgname-$pkgver"/"dkms.conf"
 blacklist_file="/etc/modprobe.d/blacklist-""$pkgname""-dkms.conf"
