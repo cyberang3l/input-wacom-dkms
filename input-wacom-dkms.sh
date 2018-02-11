@@ -78,6 +78,7 @@ version_ge() {
 
 DRIVER_KERNEL_VER=
 # ls -d */ | sed -e s'/\///' | sed -E 's/[a-zA-Z]+//g' | sort -V -r);
+if [[ -z "$DRIVER_KERNEL_VER" ]]; then version_ge $(uname -r | sed -E 's/([0-9]+.[0-9]+.[0-9]+).*/\1/') 4.5.0 && DRIVER_KERNEL_VER=4.5; fi
 if [[ -z "$DRIVER_KERNEL_VER" ]]; then version_ge $(uname -r | sed -E 's/([0-9]+.[0-9]+.[0-9]+).*/\1/') 3.17.0 && DRIVER_KERNEL_VER=3.17; fi
 if [[ -z "$DRIVER_KERNEL_VER" ]]; then version_ge $(uname -r | sed -E 's/([0-9]+.[0-9]+.[0-9]+).*/\1/') 3.7.0 && DRIVER_KERNEL_VER=3.7; fi
 if [[ -z "$DRIVER_KERNEL_VER" ]]; then version_ge $(uname -r | sed -E 's/([0-9]+.[0-9]+.[0-9]+).*/\1/') 2.6.38 && DRIVER_KERNEL_VER=2.6.38; fi
@@ -127,7 +128,7 @@ EOF
 
 function create_udev_rules_file {
    # Create a udev rules to give permission to simple users to change the led status
-   if [[ "$DRIVER_KERNEL_VER" == "3.17" ]]; then
+   if version_ge "$DRIVER_KERNEL_VER" "3.17"; then
       cat << EOF > "$udev_rules_file"
 ATTRS{idVendor}=="056a", RUN+="/bin/bash -c '/bin/chmod 666 /sys/class/hidraw/hidraw*/device/wacom_led/status_led*_select'"
 EOF
