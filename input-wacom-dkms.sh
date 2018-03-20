@@ -147,7 +147,7 @@ if [[ "$1" == "install" ]]; then
 		exit 1
 	fi
 
-	wget http://downloads.sourceforge.net/project/linuxwacom/xf86-input-wacom/input-wacom/"$pkgname"-"$pkgver".tar.bz2 -O "$dest_dir""$pkgname"-"$pkgver".tar.bz2
+	wget https://github.com/linuxwacom/input-wacom/releases/download/input-wacom-"${pkgver}"/"${pkgname}"-"${pkgver}".tar.bz2 -O "${dest_dir}""${pkgname}"-"${pkgver}".tar.bz2
 
 	cd "$dest_dir"
 
