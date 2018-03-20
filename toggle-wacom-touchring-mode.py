@@ -415,13 +415,13 @@ class toggle_touchring(object):
     #----------------------------------------------------------------------
     def __init__(self):
         # Choose the right led path based on the kernel version
-	system_kernel_version = os.uname()[2]
-	compare_kernel_version = "3.17"
+        system_kernel_version = os.uname()[2]
+        compare_kernel_version = "3.17"
         if system_kernel_version < compare_kernel_version:
             status_led0_select_path = '/sys/bus/usb/devices/*/wacom_led/status_led0_select'
         else:
             status_led0_select_path = '/sys/class/hidraw/hidraw*/device/wacom_led/status_led0_select'
-	
+
         # Get the status_led0_select file
         cmd = executeCommand('ls {}'.format(status_led0_select_path), shell=True)
         # If the return status of the ls file == 0, the file exists.
